@@ -10,6 +10,7 @@
 - **Lulus = minimal 2 pts tiap kriteria.** Nilai 0 di satu kriteria = submission ditolak.
 - **Plan before coding.** Tiap fitur diusulkan dulu, tunggu approval, baru edit file.
 - Yang butuh setup akun eksternal (Firebase, Gemini) ditaruh belakang, biar aplikasi cepat kelihatan jalan.
+- **Ikut format mentor.** Branch `submission` di repo `dicodingacademy/a758-machine-learning-flutter` = skeleton resmi: struktur `controller/` + `ui/` + `widget/` dengan **Provider**. Kita bangun di atas kerangka itu.
 
 ## Peta 3 kriteria
 
@@ -38,27 +39,33 @@
 
 ## Urutan pengerjaan
 
-### Tahap 0 — Fondasi  ← SEDANG DIKERJAKAN
+### Tahap 0 — Fondasi  ✅ SELESAI (2026-07-24)
 
 Tujuan: kerangka proyek rapi sebelum nambah fitur. Belum ada fitur ML/API.
+Hasil: rename app ID → `com.projecopedia.*` (semua platform), struktur `lib/` mentor terbentuk, `flutter analyze` bersih, smoke test lolos.
 
-- [ ] Tambah dependency awal ke `pubspec.yaml`: `image_picker` (yang lain ditambah saat fiturnya dikerjakan, biar gampang lacak error versi/build).
-- [ ] Bikin struktur folder di `lib/`:
+- [x] Tambah dependency awal ke `pubspec.yaml`: `provider` (^6.1.5 terpasang) + `image_picker` (^1.1.2). Sisanya ditambah saat fiturnya dikerjakan.
+- [x] Bikin struktur folder di `lib/` — **ikut format mentor** (branch `submission`):
   ```
   lib/
-  ├── main.dart          # entry point, setup MaterialApp + tema
-  ├── screens/           # halaman (Home, Prediksi, dll.)
-  │   └── home_screen.dart
-  ├── services/          # logika akses "luar": ML, MealDB, Gemini, image picker
-  ├── models/            # class data (hasil prediksi, resep, nutrisi)
-  ├── widgets/           # widget reusable
-  └── utils/             # helper (preprocessing gambar, konstanta)
+  ├── main.dart              # entry: MultiProvider → ChangeNotifierProvider → MaterialApp → HomePage
+  ├── controller/            # state + orkestrasi (class ChangeNotifier), diakses via Provider
+  │   └── home_controller.dart
+  ├── ui/                    # halaman penuh
+  │   ├── home_page.dart
+  │   └── result_page.dart
+  ├── widget/                # widget reusable (mis. item hasil klasifikasi)
+  │   └── classification_item.dart
+  ├── service/   (nanti)     # akses "luar" mentah: ML/TFLite, MealDB, Gemini, image picker
+  ├── model/     (nanti)     # class data murni (hasil prediksi, resep, nutrisi)
+  └── util/      (nanti)     # helper (preprocessing gambar, konstanta)
   ```
-  *Kenapa:* pisahkan UI (screens/widgets) dari logika (services) dari data (models). `main.dart` nggak jadi file raksasa.
-- [ ] Ganti `main.dart` bawaan (demo counter) → `HomeScreen` sederhana: judul aplikasi + tombol placeholder "Ambil Gambar" (belum fungsional).
-- [ ] Verifikasi: `flutter pub get` + `flutter analyze` bersih.
+  *Kenapa:* `controller/ui/widget` = kerangka wajib dari mentor (pakai Provider). `service/model/util` kita tambah saat butuh (belum ada di skeleton mentor) supaya controller nggak gemuk — controller memanggil service, service yang benar-benar akses ML/API.
+- [x] Ganti `main.dart` bawaan (demo counter) → skeleton ala mentor: `MultiProvider(HomeController)` → `HomePage` sederhana (judul app + tombol placeholder "Ambil Gambar") + `ResultPage` kosong. Bonus: `widget/classification_item.dart`.
+- [x] Verifikasi: `flutter pub get` + `flutter analyze` bersih + `flutter test` lolos.
+- [x] Rename application ID `com.example.*` → `com.projecopedia.*` konsisten (Android namespace + applicationId + MainActivity.kt, iOS/macOS bundle id, linux/windows).
 
-**Keputusan tertunda — state management:** rekomendasi mulai simpel (`setState` + `StatefulWidget`), perkenalkan `Provider` kalau state mulai ribet (misal hasil ML dibagi ke banyak halaman). Alternatif: `Provider` dari awal (banyak dipakai di kelas Dicoding lain).
+**Keputusan state management — SUDAH DIPUTUS: `Provider` dari awal.** Mentor mewajibkan lewat skeleton (`provider: ^6.1.2`, `ChangeNotifierProvider` di `main.dart`). Tiap "state" ditaruh di class `ChangeNotifier` dalam `controller/`, panggil `notifyListeners()` saat berubah, UI membaca via `context.watch`/`context.read`.
 
 ### Tahap 1 — Kriteria 1: Ambil gambar
 
@@ -67,7 +74,7 @@ Paling gampang, tanpa akun/API. Kerjakan bertingkat:
 - [ ] **Basic:** `image_picker` — ambil dari kamera & galeri, tampilkan gambar terpilih di halaman.
 - [ ] **Skilled:** `image_cropper` — crop bagian penting gambar.
 - [ ] **Advanced:** `camera` — live camera stream / camera feed untuk identifikasi.
-- [ ] Setup izin: Android `AndroidManifest.xml` + iOS `Info.plist` (kamera & galeri).
+- [ ] Setup izin: Android `AndroidManifest.xml` + iOS `Info.plist` (kamera & galeri). Catatan: skeleton mentor & project kita **sama-sama belum punya `uses-permission`** — ini murni tugas kita.
 
 ### Tahap 2 — Kriteria 2: ML inference
 
@@ -79,7 +86,8 @@ Lalu bertingkat:
 
 - [ ] **Basic:** `tflite_flutter` + package `image`. Load model, preprocess 224×224, inferensi setelah gambar diambil. Uji dulu pakai sample images.
 - [ ] **Skilled:** pindahkan inferensi ke **Isolate** biar UI nggak freeze.
-- [ ] **Advanced:** **Firebase ML** — deploy model ke cloud, unduh dinamis dari app. (Butuh akun Firebase; config files WAJIB di-commit.)
+- [ ] **Advanced:** **Firebase ML** — deploy model ke cloud, unduh dinamis dari app. (Butuh akun Firebase; config files WAJIB di-commit.) Skeleton mentor punya `firebase.json` acuan → **generate punya sendiri** via `flutterfire configure` (JANGAN salin project mentor `fir-ml-project-dicoding`).
+- [ ] Catatan TODO gradle (bawaan `flutter create`, opsional): ganti `applicationId` dari `com.example.food_recognizer` ke ID unik; signing rilis boleh tetap debug key.
 
 ### Tahap 3 — Kriteria 3: Halaman prediksi
 
@@ -104,8 +112,8 @@ Lalu bertingkat:
 
 ## Status persetujuan
 
-- ✅ **Rencana Tahap 0 (Fondasi) DISETUJUI user** (2026-07-24). Siap dieksekusi.
-- ⏳ **Keputusan tertunda — state management:** belum dipilih antara `setState` dulu (rekomendasi) vs `Provider` dari awal. Tanyakan lagi di awal sesi berikutnya sebelum mulai koding.
+- ✅ **Rencana Tahap 0 (Fondasi) DISETUJUI user** (2026-07-24). Diselaraskan dgn format mentor (branch `submission`) 2026-07-24.
+- ✅ **State management DIPUTUS: `Provider`** (ikut skeleton mentor). Struktur folder ikut mentor: `controller/`, `ui/`, `widget/` (+ `service/model/util` menyusul).
 
 ## Catatan lingkungan
 
