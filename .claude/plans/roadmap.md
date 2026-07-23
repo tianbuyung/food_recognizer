@@ -115,8 +115,14 @@ Lalu bertingkat:
 - ✅ **Rencana Tahap 0 (Fondasi) DISETUJUI user** (2026-07-24). Diselaraskan dgn format mentor (branch `submission`) 2026-07-24.
 - ✅ **State management DIPUTUS: `Provider`** (ikut skeleton mentor). Struktur folder ikut mentor: `controller/`, `ui/`, `widget/` (+ `service/model/util` menyusul).
 
+## ▶️ LANJUT DARI SINI (sesi berikutnya)
+
+- **Terakhir dikerjakan:** Tahap 0 selesai & ter-commit (`f5843d0`), working tree bersih.
+- **Berikutnya:** **Tahap 1 — Kriteria 1 (Ambil gambar)**. Belum dimulai, belum ada rencana disetujui.
+- **Aksi pertama besok:** susun rencana bertingkat Tahap 1 (`image_picker` → `image_cropper` → `camera` + setup izin Android/iOS), **tunggu approval user sebelum ngoding** (plan-before-coding).
+- Belum perlu aset eksternal untuk Tahap 1 (Kaggle/Firebase/Gemini baru dibutuhkan Tahap 2–3).
+
 ## Catatan lingkungan
 
-- `flutter`/`dart` ada di `/Users/septianmaulana/Development/flutter/bin/`. **Pakai path lengkap** untuk menjalankan flutter (mis. `/Users/septianmaulana/Development/flutter/bin/flutter pub get`).
-- **Kenapa `flutter` tidak ada di PATH tool?** Bukan bug setup user. User sudah daftarkan flutter di `.zshenv:2` DAN `.zshrc:129` (jalan normal di Terminal interaktif). Tapi tool berjalan di dalam harness **cmux** yang menyuntikkan PATH snapshot sendiri (lihat entri `cmux-cli-shims` di depan PATH) dan tidak me-source `.zshenv`/`.zshrc`, jadi baris flutter tidak kepakai di shell tool. Tidak berdampak ke aplikasi — cukup pakai path lengkap. **Jangan investigasi ulang isu ini.**
+- `flutter`/`dart` versi **3.44.7 stable** (Dart 3.12.2), terpasang di `/Users/septianmaulana/Development/flutter/bin/`. **Sudah ada di PATH shell tool** — cukup panggil `flutter ...` langsung (tak perlu path lengkap). Diverifikasi 2026-07-24; catatan lama soal "flutter tidak di PATH" sudah usang, abaikan.
 - Hook `PostToolUse` aktif: otomatis `dart format` tiap file `.dart` ditulis/diedit.
