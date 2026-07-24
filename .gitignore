@@ -1,3 +1,6 @@
+# Claude Code personal instructions (private, not shared)
+CLAUDE.local.md
+
 # Miscellaneous
 *.class
 *.log
@@ -43,3 +46,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+/docs
+
+# Rahasia: API key (Gemini). Jangan commit — sertakan di ZIP submission saja.
+.env

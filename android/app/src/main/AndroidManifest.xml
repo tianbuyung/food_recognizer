@@ -1,6 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Akses jaringan: unduh model (Firebase Storage) + MealDB + Gemini API.
+         Auto-ditambahkan Flutter hanya di build debug/profile — dideklarasikan
+         di sini agar build RELEASE juga punya akses jaringan. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Kriteria 1: memotret makanan. Karena izin ini dideklarasikan, Android 6+
+         mewajibkan permintaan izin saat runtime — ditangani permission_handler
+         di lib/service/image_service.dart. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
-        android:label="food_recognizer"
+        android:label="Food Recognizer"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -25,6 +35,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Kriteria 1 (Skilled): layar crop dari package image_cropper memakai
+             uCrop, yang butuh Activity ini didaftarkan. Tanpa baris ini app
+             crash saat membuka crop. -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
