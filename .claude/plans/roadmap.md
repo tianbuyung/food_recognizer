@@ -97,7 +97,9 @@ Lalu bertingkat:
 
 - [x] **Basic:** halaman detail — foto + nama + confidence. ✅ (sudah di `ResultPage` sejak PR #5).
 - [x] **Skilled:** **MealDB API** (gratis, tanpa key). ✅ (branch `feat/resep-mealdb`) — `RecipeService.searchByName` → bagian "Resep" di `ResultPage` (kartu foto+nama+area) → `RecipeDetailPage` (bahan + langkah). Otomatis fetch dari `topResult.label`. 7 test (MockClient). Diverifikasi: nasi-lemak → resep Malaysian tampil. Izin INTERNET ditambah di manifest (untuk release).
-- [ ] **Advanced:** **Gemini API** — nutrisi (kalori, karbohidrat, lemak, serat, protein dalam gram) via structured output. API key JANGAN di-hardcode, load saat runtime. ← BERIKUTNYA (butuh API key dari user, dipandu).
+- [x] **Advanced:** **Gemini API** — nutrisi. ✅ (branch `feat/nutrisi-gemini`) — `NutritionService` panggil Gemini REST (`gemini-flash-latest`) dgn structured output (5 angka). Key dari `.env` via `flutter_dotenv` (gitignored, ikut ZIP; `.env.example` template). Bagian "Nutrisi" di `ResultPage` (chip Wrap anti-overflow). 8 test (MockClient). Diverifikasi: nasi-lemak → 500 kkal/65g/22g/3g/12g. **KRITERIA 3 TUNTAS.**
+  - **CATATAN model:** pakai `gemini-flash-latest` (alias) — versi spesifik spt `gemini-2.5-flash` bisa "not available to new users" (kena di key baru). Aman untuk key reviewer.
+  - **CATATAN key:** reviewer akan ganti `GEMINI_API_KEY` di `.env` dgn key mereka. Format key `AQ.*` maupun `AIza*` sama-sama valid.
 
 ### Tahap 4 — Pra-submission
 
@@ -132,16 +134,17 @@ Lalu bertingkat:
 - ✅ **Kriteria 2 Skilled (Isolate) SELESAI** (2026-07-24). Inferensi pindah ke Isolate.run, hasil identik. **KRITERIA 2 TUNTAS 3 tier.**
 - ✅ **Setup tooling** (2026-07-24): kagglehub, Firebase CLI, FlutterFire CLI, Xcode 26.6, CocoaPods, Ruby 4.0.6, xcodeproj — dicatat di `~/Development/tools/installed-tools.md`. Firebase project `projecopedia-food-recognizer` dibuat.
 - ✅ **Kriteria 3 Basic + Skilled SELESAI** (2026-07-24). Halaman prediksi (foto+nama+confidence) + resep MealDB (kartu → detail). Diverifikasi di emulator.
+- ✅ **Kriteria 3 Advanced (Gemini nutrisi) SELESAI** (2026-07-24). **🏆 SEMUA 3 KRITERIA TUNTAS 3-TIER (target 4 poin).**
 
 ## ▶️ LANJUT DARI SINI (sesi berikutnya)
 
-- **Terakhir dikerjakan:** Kriteria 3 **Skilled (MealDB)** (branch `feat/resep-mealdb`). **Kriteria 1, 2 TUNTAS; Kriteria 3 tinggal Advanced.**
-- **Berikutnya (TERAKHIR): Kriteria 3 Advanced — Gemini API** (nutrisi). Tinggal 1 tier lagi untuk semua kriteria 4 poin!
-  - **PRASYARAT: API key** dari Google AI Studio (aistudio.google.com) — **pandu user buat key**, load runtime (JANGAN hardcode; mis. `--dart-define` atau file gitignored).
-  - Config di `05-tips-and-trik.md`: system instruction ("mesin identifikasi nutrisi... kalori/karbo/lemak/serat/protein gram") + prompt (`Nama makanannya adalah $foodName.`) + **structured output** (JSON 5 angka).
-  - Paket: `google_generative_ai` (atau http langsung). Tampilkan nutrisi di `ResultPage` (bagian baru) dari `topResult.label`.
-- **Lalu:** Tahap 4 pra-submission (`/submission-check`: analyze, dart format, cek overflow, asset <5MB, ZIP <25MB).
-- **Catatan:** feed kamera live bisa disambung ke inferensi realtime nanti (butuh `ImageUtils.convertCameraImage` dari starter project) — opsional.
+- **Terakhir dikerjakan:** Kriteria 3 **Advanced (Gemini)** (branch `feat/nutrisi-gemini`). **SEMUA FITUR SELESAI.**
+- **Berikutnya: Tahap 4 — Pra-submission** (kriteria fitur sudah lengkap):
+  - Jalankan skill **`/submission-check`**: `flutter analyze` + `dart format` bersih, cek overflow di layar kecil, asset <5MB, ZIP <25MB.
+  - Pastikan `.env` **ikut di ZIP** (walau gitignored) — reviewer perlu file itu untuk isi key mereka. Cek juga config Firebase ter-commit (sudah).
+  - Rapikan: `android:label`, README (cara set GEMINI_API_KEY untuk reviewer).
+  - **Opsional:** restrict kunci Firebase di Cloud Console; dismiss 3 alert secret-scanning GitHub (kunci Firebase publik by design — bukan bocor).
+- **Opsional lanjutan (di luar kriteria):** inferensi realtime dari kamera live (`ImageUtils.convertCameraImage`); rilis Play Store (Tahap 5).
 
 ## Catatan lingkungan
 
