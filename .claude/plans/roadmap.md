@@ -71,10 +71,10 @@ Hasil: rename app ID → `com.projecopedia.*` (semua platform), struktur `lib/` 
 
 Paling gampang, tanpa akun/API. Kerjakan bertingkat:
 
-- [ ] **Basic:** `image_picker` — ambil dari kamera & galeri, tampilkan gambar terpilih di halaman.
+- [x] **Basic:** `image_picker` — ambil dari kamera & galeri, tampilkan gambar terpilih di halaman. ✅ (branch `feat/ambil-gambar`) — `ImageService` bungkus picker + `permission_handler`, `HomeController` state XFile, `HomePage` bottom sheet + preview 1:1 + SnackBar error, 6 widget test.
 - [ ] **Skilled:** `image_cropper` — crop bagian penting gambar.
 - [ ] **Advanced:** `camera` — live camera stream / camera feed untuk identifikasi.
-- [ ] Setup izin: Android `AndroidManifest.xml` + iOS `Info.plist` (kamera & galeri). Catatan: skeleton mentor & project kita **sama-sama belum punya `uses-permission`** — ini murni tugas kita.
+- [x] Setup izin: Android `AndroidManifest.xml` (`CAMERA`) + iOS `Info.plist` (`NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription`). ✅ Galeri Android 13+ pakai Photo Picker (tanpa izin storage).
 
 ### Tahap 2 — Kriteria 2: ML inference
 
@@ -110,17 +110,25 @@ Lalu bertingkat:
 - **Firebase project** — untuk Tahap 2 Advanced (config: `google-services.json` / `GoogleService-Info.plist` / `firebase_options.dart`).
 - **Gemini API key** (Google AI Studio) — untuk Tahap 3 Advanced. Keluarkan dari project yang di-commit.
 
+## Alur Git (DIPUTUS user, 2026-07-24) — Git Flow
+
+- `main` = stabil (baseline 1 commit init sampai ada rilis via develop).
+- `develop` = integrasi. Tahap 0 (fondasi) sudah masuk via PR #1.
+- Branch topik per langkah: `feat/*` `docs/*` `fix/*` `chore/*` → PR ke `develop`.
+- `develop` → `main` lewat PR saat rilis.
+
 ## Status persetujuan
 
 - ✅ **Rencana Tahap 0 (Fondasi) DISETUJUI user** (2026-07-24). Diselaraskan dgn format mentor (branch `submission`) 2026-07-24.
 - ✅ **State management DIPUTUS: `Provider`** (ikut skeleton mentor). Struktur folder ikut mentor: `controller/`, `ui/`, `widget/` (+ `service/model/util` menyusul).
+- ✅ **Tier Basic Kriteria 1 SELESAI** (2026-07-24). Diverifikasi di emulator Android.
 
 ## ▶️ LANJUT DARI SINI (sesi berikutnya)
 
-- **Terakhir dikerjakan:** Tahap 0 selesai & ter-commit (`f5843d0`), working tree bersih.
-- **Berikutnya:** **Tahap 1 — Kriteria 1 (Ambil gambar)**. Belum dimulai, belum ada rencana disetujui.
-- **Aksi pertama besok:** susun rencana bertingkat Tahap 1 (`image_picker` → `image_cropper` → `camera` + setup izin Android/iOS), **tunggu approval user sebelum ngoding** (plan-before-coding).
-- Belum perlu aset eksternal untuk Tahap 1 (Kaggle/Firebase/Gemini baru dibutuhkan Tahap 2–3).
+- **Terakhir dikerjakan:** Kriteria 1 tier **Basic** (branch `feat/ambil-gambar`, PR ke develop). Fondasi Tahap 0 sudah di develop via PR #1.
+- **Berikutnya:** **Kriteria 1 tier Skilled — `image_cropper`** (crop gambar setelah dipilih, sebelum preview/inferensi). Belum ada rencana disetujui.
+- **Aksi pertama:** susun rencana crop (di mana `image_cropper` dipanggil dalam alur, UI-nya, plugin config Android/iOS), **tunggu approval user sebelum ngoding** (plan-before-coding).
+- Belum perlu aset eksternal untuk Kriteria 1 (Kaggle/Firebase/Gemini baru dibutuhkan Kriteria 2–3).
 
 ## Catatan lingkungan
 
