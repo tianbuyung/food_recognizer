@@ -5,6 +5,19 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:food_recognizer/controller/home_controller.dart';
+import 'package:food_recognizer/ui/camera_page.dart';
+
+/// Tiga cara memasukkan gambar (dipilih lewat bottom sheet).
+enum _PickSource {
+  /// Kamera live (package `camera`) — preview realtime + jepret.
+  liveCamera,
+
+  /// Kamera cepat (package `image_picker`) — buka app kamera bawaan.
+  quickCamera,
+
+  /// Galeri (package `image_picker`).
+  gallery,
+}
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -77,7 +90,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// Menampilkan pilihan sumber gambar, lalu meneruskannya ke controller.
+  /// Menampilkan pilihan sumber gambar, lalu menjalankannya.
   Future<void> _pickImage(BuildContext context) async {
     final source = await _showSourceSheet(context);
     if (source == null) return; // user menutup sheet tanpa memilih
@@ -89,9 +102,41 @@ class HomePage extends StatelessWidget {
     // context.read dipakai di callback: kita hanya butuh memanggil method,
     // tidak perlu widget ini rebuild karenanya.
     final controller = context.read<HomeController>();
-    await controller.pickImage(source);
-    if (!context.mounted) return;
 
+    switch (source) {
+      case _PickSource.gallery:
+        await controller.pickImage(ImageSource.gallery);
+      case _PickSource.quickCamera:
+        await controller.pickImage(ImageSource.camera);
+      case _PickSource.liveCamera:
+        await _openLiveCamera(context, controller);
+    }
+
+    if (!context.mounted) return;
+    _showErrorIfAny(context, controller);
+  }
+
+  /// Cek izin → buka [CameraPage] → proses jepretan (crop → preview).
+  Future<void> _openLiveCamera(
+    BuildContext context,
+    HomeController controller,
+  ) async {
+    final ready = await controller.ensureCameraReady();
+    // ready == false berarti izin ditolak; pesan error sudah diset controller
+    // dan akan ditampilkan oleh _showErrorIfAny di pemanggil.
+    if (!ready || !context.mounted) return;
+
+    final captured = await Navigator.push<XFile>(
+      context,
+      MaterialPageRoute(builder: (_) => const CameraPage()),
+    );
+    if (captured == null || !context.mounted) return;
+
+    await controller.onLiveCameraCaptured(captured);
+  }
+
+  /// Menampilkan SnackBar bila controller punya pesan error yang belum tampil.
+  void _showErrorIfAny(BuildContext context, HomeController controller) {
     final message = controller.errorMessage;
     if (message == null) return;
 
@@ -112,10 +157,10 @@ class HomePage extends StatelessWidget {
     controller.clearError();
   }
 
-  /// Sheet dari bawah berisi pilihan Kamera / Galeri.
+  /// Sheet dari bawah berisi 3 sumber gambar.
   /// Mengembalikan `null` bila user menutupnya tanpa memilih.
-  Future<ImageSource?> _showSourceSheet(BuildContext context) {
-    return showModalBottomSheet<ImageSource>(
+  Future<_PickSource?> _showSourceSheet(BuildContext context) {
+    return showModalBottomSheet<_PickSource>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -123,17 +168,23 @@ class HomePage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.photo_camera),
-              title: const Text('Kamera'),
-              subtitle: const Text('Potret makanan sekarang'),
+              leading: const Icon(Icons.videocam),
+              title: const Text('Kamera Live'),
+              subtitle: const Text('Preview realtime, lalu jepret'),
               // Navigator.pop dengan nilai: nilai itu jadi hasil Future di atas.
-              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+              onTap: () => Navigator.pop(sheetContext, _PickSource.liveCamera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Kamera Cepat'),
+              subtitle: const Text('Buka aplikasi kamera bawaan'),
+              onTap: () => Navigator.pop(sheetContext, _PickSource.quickCamera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: const Text('Galeri'),
               subtitle: const Text('Pilih foto yang sudah ada'),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+              onTap: () => Navigator.pop(sheetContext, _PickSource.gallery),
             ),
           ],
         ),

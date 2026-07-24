@@ -34,12 +34,16 @@ class _FakeImageService extends ImageService {
     this.cropped,
     this.cropReturnsNull = false,
     this.error,
+    this.cameraPermissionError,
   });
 
   final XFile? file;
   final XFile? cropped;
   final bool cropReturnsNull;
   final Object? error;
+
+  /// Bila diisi, [ensureCameraPermission] melemparnya (meniru izin ditolak).
+  final Object? cameraPermissionError;
 
   @override
   Future<XFile?> pickImage(ImageSource source) async {
@@ -52,6 +56,11 @@ class _FakeImageService extends ImageService {
     if (cropReturnsNull) return null;
     // Default: kembalikan file crop; kalau tak diberi, pantulkan path asal.
     return cropped ?? XFile(sourcePath);
+  }
+
+  @override
+  Future<void> ensureCameraPermission() async {
+    if (cameraPermissionError != null) throw cameraPermissionError!;
   }
 }
 
@@ -99,9 +108,7 @@ void main() {
     expect(find.text('Ambil Gambar'), findsOneWidget);
   });
 
-  testWidgets('bottom sheet menampilkan pilihan Kamera & Galeri', (
-    tester,
-  ) async {
+  testWidgets('bottom sheet menampilkan 3 sumber gambar', (tester) async {
     await tester.pumpWidget(
       _wrap(HomeController(imageService: ImageService())),
     );
@@ -109,7 +116,8 @@ void main() {
     await tester.tap(find.text('Ambil Gambar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Kamera'), findsOneWidget);
+    expect(find.text('Kamera Live'), findsOneWidget);
+    expect(find.text('Kamera Cepat'), findsOneWidget);
     expect(find.text('Galeri'), findsOneWidget);
   });
 
@@ -188,7 +196,7 @@ void main() {
     );
     await tester.pumpWidget(_wrap(controller));
 
-    await _pickFrom(tester, 'Kamera');
+    await _pickFrom(tester, 'Kamera Cepat');
 
     expect(find.byType(SnackBar), findsOneWidget);
     expect(
@@ -210,9 +218,63 @@ void main() {
     );
     await tester.pumpWidget(_wrap(controller));
 
-    await _pickFrom(tester, 'Kamera');
+    await _pickFrom(tester, 'Kamera Cepat');
 
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Buka Pengaturan'), findsNothing);
   });
+
+  // --- Kamera live (tier Advanced) ---
+  //
+  // CameraPage butuh plugin `camera` native yang tak tersedia di `flutter test`,
+  // jadi jepretan diuji langsung lewat controller (bukan menekan tombol shutter).
+
+  test('onLiveCameraCaptured: jepretan di-crop lalu jadi preview', () async {
+    final controller = HomeController(
+      imageService: _FakeImageService(cropped: fotoCrop),
+    );
+
+    await controller.onLiveCameraCaptured(fotoUji);
+
+    // Hasil crop yang disimpan, bukan frame mentah.
+    expect(controller.selectedImage?.path, fotoCrop.path);
+  });
+
+  test('onLiveCameraCaptured: batal crop → frame asli dipakai', () async {
+    final controller = HomeController(
+      imageService: _FakeImageService(cropReturnsNull: true),
+    );
+
+    await controller.onLiveCameraCaptured(fotoUji);
+
+    expect(controller.selectedImage?.path, fotoUji.path);
+  });
+
+  test('ensureCameraReady: izin diberikan → true, tanpa error', () async {
+    final controller = HomeController(imageService: _FakeImageService());
+
+    final ready = await controller.ensureCameraReady();
+
+    expect(ready, isTrue);
+    expect(controller.errorMessage, isNull);
+  });
+
+  test(
+    'ensureCameraReady: izin ditolak permanen → false + error permanen',
+    () async {
+      final controller = HomeController(
+        imageService: _FakeImageService(
+          cameraPermissionError: const CameraPermissionDeniedException(
+            isPermanent: true,
+          ),
+        ),
+      );
+
+      final ready = await controller.ensureCameraReady();
+
+      expect(ready, isFalse);
+      expect(controller.isPermissionPermanentlyDenied, isTrue);
+      expect(controller.errorMessage, isNotNull);
+    },
+  );
 }

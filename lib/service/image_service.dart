@@ -52,13 +52,20 @@ class ImageService {
   /// Mengembalikan `null` bila user membatalkan (bukan error).
   /// Melempar [CameraPermissionDeniedException] bila izin kamera ditolak.
   Future<XFile?> pickImage(ImageSource source) async {
-    if (source == ImageSource.camera && _needsRuntimePermission) {
-      await _ensureCameraPermission();
+    if (source == ImageSource.camera) {
+      await ensureCameraPermission();
     }
     return _picker.pickImage(source: source);
   }
 
-  Future<void> _ensureCameraPermission() async {
+  /// Memastikan izin kamera diberikan sebelum membuka kamera.
+  ///
+  /// Publik karena juga dipakai halaman kamera live (package `camera`) sebelum
+  /// menginisialisasi controller. Melempar [CameraPermissionDeniedException]
+  /// bila ditolak. Di web/desktop langkah izin dilewati (plugin tak tersedia).
+  Future<void> ensureCameraPermission() async {
+    if (!_needsRuntimePermission) return;
+
     // request() mengembalikan status yang sudah ada bila izin pernah diberikan,
     // jadi dialog sistem tidak muncul berulang kali.
     final status = await Permission.camera.request();
