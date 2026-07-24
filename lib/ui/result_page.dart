@@ -3,10 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:food_recognizer/controller/nutrition_controller.dart';
 import 'package:food_recognizer/controller/recipe_controller.dart';
 import 'package:food_recognizer/controller/result_controller.dart';
+import 'package:food_recognizer/model/nutrition.dart';
 import 'package:food_recognizer/model/recipe.dart';
 import 'package:food_recognizer/service/ml_service.dart';
+import 'package:food_recognizer/service/nutrition_service.dart';
 import 'package:food_recognizer/service/recipe_service.dart';
 import 'package:food_recognizer/ui/recipe_detail_page.dart';
 import 'package:food_recognizer/widget/classification_item.dart';
@@ -214,9 +217,126 @@ class _Results extends StatelessWidget {
             ClassificationItem(label: c.label, confidence: c.confidence),
         ],
         const SizedBox(height: 24),
+        // Nutrisi dari Gemini (Kriteria 3 Advanced).
+        _NutritionSection(foodName: top.label),
+        const SizedBox(height: 24),
         // Resep terkait dari MealDB (Kriteria 3 Skilled).
         _RecipeSection(foodName: top.label),
       ],
+    );
+  }
+}
+
+/// Bagian nutrisi: otomatis mengambil estimasi gizi untuk [foodName] via Gemini.
+class _NutritionSection extends StatelessWidget {
+  const _NutritionSection({required this.foodName});
+
+  final String foodName;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<NutritionController>(
+      create: (ctx) =>
+          NutritionController(service: ctx.read<NutritionService>())
+            ..fetch(foodName),
+      child: const _NutritionSectionBody(),
+    );
+  }
+}
+
+class _NutritionSectionBody extends StatelessWidget {
+  const _NutritionSectionBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<NutritionController>();
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Nutrisi (perkiraan per porsi)',
+          style: theme.textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        switch (controller.status) {
+          NutritionStatus.loading => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          NutritionStatus.error => Text(
+            controller.errorMessage ?? 'Gagal memuat nutrisi.',
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
+          NutritionStatus.done => _NutritionGrid(
+            nutrition: controller.nutrition!,
+          ),
+          NutritionStatus.idle => const SizedBox.shrink(),
+        },
+      ],
+    );
+  }
+}
+
+/// Menampilkan 5 angka gizi sebagai kartu-kartu kecil.
+class _NutritionGrid extends StatelessWidget {
+  const _NutritionGrid({required this.nutrition});
+
+  final Nutrition nutrition;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <({String label, String value})>[
+      (label: 'Kalori', value: '${nutrition.calories.round()} kkal'),
+      (label: 'Karbohidrat', value: '${nutrition.carbohydrates.round()} g'),
+      (label: 'Lemak', value: '${nutrition.fat.round()} g'),
+      (label: 'Serat', value: '${nutrition.fiber.round()} g'),
+      (label: 'Protein', value: '${nutrition.protein.round()} g'),
+    ];
+
+    // Wrap = otomatis pindah baris di layar kecil → anti-overflow.
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [for (final it in items) _NutritionChip(item: it)],
+    );
+  }
+}
+
+class _NutritionChip extends StatelessWidget {
+  const _NutritionChip({required this.item});
+
+  final ({String label, String value}) item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            item.label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSecondaryContainer,
+            ),
+          ),
+          Text(
+            item.value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSecondaryContainer,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
