@@ -47,9 +47,14 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final file = await _imageService.pickImage(source);
-      // file == null berarti user membatalkan — bukan error, foto lama dibiarkan.
-      if (file != null) _selectedImage = file;
+      final picked = await _imageService.pickImage(source);
+      // picked == null berarti user membatalkan — bukan error, foto lama dibiarkan.
+      if (picked != null) {
+        // Langsung buka crop. Kalau user membatalkan crop (hasil null), pakai
+        // foto asli apa adanya supaya alur tidak buntu.
+        final cropped = await _imageService.cropImage(picked.path);
+        _selectedImage = cropped ?? picked;
+      }
     } on CameraPermissionDeniedException catch (e) {
       _errorMessage = e.message;
       _isPermissionPermanentlyDenied = e.isPermanent;

@@ -72,7 +72,7 @@ Hasil: rename app ID → `com.projecopedia.*` (semua platform), struktur `lib/` 
 Paling gampang, tanpa akun/API. Kerjakan bertingkat:
 
 - [x] **Basic:** `image_picker` — ambil dari kamera & galeri, tampilkan gambar terpilih di halaman. ✅ (branch `feat/ambil-gambar`) — `ImageService` bungkus picker + `permission_handler`, `HomeController` state XFile, `HomePage` bottom sheet + preview 1:1 + SnackBar error, 6 widget test.
-- [ ] **Skilled:** `image_cropper` — crop bagian penting gambar.
+- [x] **Skilled:** `image_cropper` — crop bagian penting gambar. ✅ (branch `feat/crop-gambar`) — crop otomatis setelah pilih foto, rasio dikunci 1:1 (cocok input model 224×224). Batal crop → foto asli dipakai. `UCropActivity` didaftarkan di AndroidManifest. 8 widget test.
 - [ ] **Advanced:** `camera` — live camera stream / camera feed untuk identifikasi.
 - [x] Setup izin: Android `AndroidManifest.xml` (`CAMERA`) + iOS `Info.plist` (`NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription`). ✅ Galeri Android 13+ pakai Photo Picker (tanpa izin storage).
 
@@ -121,13 +121,14 @@ Lalu bertingkat:
 
 - ✅ **Rencana Tahap 0 (Fondasi) DISETUJUI user** (2026-07-24). Diselaraskan dgn format mentor (branch `submission`) 2026-07-24.
 - ✅ **State management DIPUTUS: `Provider`** (ikut skeleton mentor). Struktur folder ikut mentor: `controller/`, `ui/`, `widget/` (+ `service/model/util` menyusul).
-- ✅ **Tier Basic Kriteria 1 SELESAI** (2026-07-24). Diverifikasi di emulator Android.
+- ✅ **Tier Basic Kriteria 1 SELESAI** (2026-07-24). Diverifikasi di emulator Android. PR #2.
+- ✅ **Tier Skilled Kriteria 1 SELESAI** (2026-07-24). Crop 1:1 otomatis, diverifikasi di emulator (layar uCrop muncul & konfirmasi menghasilkan preview).
 
 ## ▶️ LANJUT DARI SINI (sesi berikutnya)
 
-- **Terakhir dikerjakan:** Kriteria 1 tier **Basic** (branch `feat/ambil-gambar`, PR ke develop). Fondasi Tahap 0 sudah di develop via PR #1.
-- **Berikutnya:** **Kriteria 1 tier Skilled — `image_cropper`** (crop gambar setelah dipilih, sebelum preview/inferensi). Belum ada rencana disetujui.
-- **Aksi pertama:** susun rencana crop (di mana `image_cropper` dipanggil dalam alur, UI-nya, plugin config Android/iOS), **tunggu approval user sebelum ngoding** (plan-before-coding).
+- **Terakhir dikerjakan:** Kriteria 1 tier **Skilled** (branch `feat/crop-gambar`, PR ke develop). Basic & fondasi sudah di develop.
+- **Berikutnya:** **Kriteria 1 tier Advanced — `camera`** (live camera stream/feed untuk identifikasi realtime). Ini menuntaskan Kriteria 1 ke 4 poin. Belum ada rencana disetujui.
+- **Aksi pertama:** susun rencana live camera (`camera` package: preview stream, ambil frame, izin CAMERA sudah ada dari tier Basic), **tunggu approval user sebelum ngoding** (plan-before-coding).
 - Belum perlu aset eksternal untuk Kriteria 1 (Kaggle/Firebase/Gemini baru dibutuhkan Kriteria 2–3).
 
 ## Catatan lingkungan

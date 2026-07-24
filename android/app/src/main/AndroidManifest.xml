@@ -30,6 +30,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Kriteria 1 (Skilled): layar crop dari package image_cropper memakai
+             uCrop, yang butuh Activity ini didaftarkan. Tanpa baris ini app
+             crash saat membuka crop. -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
