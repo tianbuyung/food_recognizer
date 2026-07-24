@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:food_recognizer/controller/home_controller.dart';
 import 'package:food_recognizer/firebase_options.dart';
 import 'package:food_recognizer/service/ml_service.dart';
+import 'package:food_recognizer/service/recipe_service.dart';
 import 'package:food_recognizer/ui/home_page.dart';
 
 Future<void> main() async {
@@ -33,6 +34,8 @@ class FoodRecognizerApp extends StatelessWidget {
           create: (_) => MlService(),
           dispose: (_, service) => service.dispose(),
         ),
+        // Akses MealDB API (resep). Provider biasa — dipanggil RecipeController.
+        Provider<RecipeService>(create: (_) => RecipeService()),
       ],
       child: MaterialApp(
         title: 'Food Recognizer',

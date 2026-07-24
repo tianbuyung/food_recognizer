@@ -63,6 +63,9 @@ dependencies:
   # Kriteria 2: folder lokal untuk cache model yang diunduh.
   path_provider: ^2.1.6
 
+  # Kriteria 3 (Skilled): panggil MealDB API (resep) — nanti juga Gemini.
+  http: ^1.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

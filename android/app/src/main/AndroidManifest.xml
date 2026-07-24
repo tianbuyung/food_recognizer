@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Akses jaringan: unduh model (Firebase Storage) + MealDB + Gemini API.
+         Auto-ditambahkan Flutter hanya di build debug/profile — dideklarasikan
+         di sini agar build RELEASE juga punya akses jaringan. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Kriteria 1: memotret makanan. Karena izin ini dideklarasikan, Android 6+
          mewajibkan permintaan izin saat runtime — ditangani permission_handler
          di lib/service/image_service.dart. -->
