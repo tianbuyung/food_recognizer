@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "186486904921",
+    "project_id": "projecopedia-food-recognizer",
+    "storage_bucket": "projecopedia-food-recognizer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:186486904921:android:47b82ba198da15bb5eb948",
+        "android_client_info": {
+          "package_name": "com.projecopedia.food_recognizer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYPj_IpYKqc_Tb4-z1ZjYgObkQDMCIH94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
