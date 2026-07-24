@@ -81,6 +81,8 @@ benar-benar mengakses ML/API; `ui` membaca state via `context.watch`/`read`.
 
 ## 🚀 Menjalankan
 
+> Panduan setup lengkap dari nol (model, Firebase, Gemini, troubleshooting) ada di **[SETUP.md](SETUP.md)**.
+
 **Prasyarat:** Flutter SDK (stable terbaru), perangkat/emulator Android.
 
 ```bash
