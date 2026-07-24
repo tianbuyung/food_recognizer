@@ -44,6 +44,9 @@ dependencies:
   # Minta izin runtime (kamera) di Android 6+ / iOS.
   permission_handler: ^12.0.3
 
+  # Kriteria 1 (Skilled): crop gambar setelah dipilih (dikunci rasio 1:1).
+  image_cropper: ^12.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

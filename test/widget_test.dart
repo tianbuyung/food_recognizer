@@ -23,18 +23,35 @@ const _pngBase64 =
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQ'
     'DwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-/// Pengganti [ImageService] saat test: mengembalikan [file] atau melempar
-/// [error], tanpa dialog sistem apa pun.
+/// Pengganti [ImageService] saat test: tanpa dialog sistem apa pun.
+///
+/// - [pickImage] mengembalikan [file] atau melempar [error].
+/// - [cropImage] mengembalikan [cropped]; bila [cropReturnsNull] `true` ia
+///   mengembalikan `null` (meniru user membatalkan crop).
 class _FakeImageService extends ImageService {
-  _FakeImageService({this.file, this.error});
+  _FakeImageService({
+    this.file,
+    this.cropped,
+    this.cropReturnsNull = false,
+    this.error,
+  });
 
   final XFile? file;
+  final XFile? cropped;
+  final bool cropReturnsNull;
   final Object? error;
 
   @override
   Future<XFile?> pickImage(ImageSource source) async {
     if (error != null) throw error!;
     return file;
+  }
+
+  @override
+  Future<XFile?> cropImage(String sourcePath) async {
+    if (cropReturnsNull) return null;
+    // Default: kembalikan file crop; kalau tak diberi, pantulkan path asal.
+    return cropped ?? XFile(sourcePath);
   }
 }
 
@@ -57,12 +74,18 @@ Future<void> _pickFrom(WidgetTester tester, String sumber) async {
 void main() {
   late Directory tempDir;
   late XFile fotoUji;
+  late XFile fotoCrop;
 
   setUpAll(() async {
     tempDir = await Directory.systemTemp.createTemp('food_recognizer_test');
     final file = File('${tempDir.path}/uji.png');
     await file.writeAsBytes(base64Decode(_pngBase64));
     fotoUji = XFile(file.path);
+
+    // File terpisah untuk meniru "hasil crop" yang berbeda dari foto asli.
+    final crop = File('${tempDir.path}/uji_crop.png');
+    await crop.writeAsBytes(base64Decode(_pngBase64));
+    fotoCrop = XFile(crop.path);
   });
 
   tearDownAll(() async => tempDir.delete(recursive: true));
@@ -109,6 +132,35 @@ void main() {
     expect(find.text('Ganti Gambar'), findsOneWidget);
     expect(find.text('Analisis'), findsOneWidget);
     expect(find.text('Ambil Gambar'), findsNothing);
+  });
+
+  testWidgets('hasil crop (bukan foto asli) yang disimpan sebagai preview', (
+    tester,
+  ) async {
+    // pickImage → fotoUji, cropImage → fotoCrop. State harus memakai hasil crop.
+    final controller = HomeController(
+      imageService: _FakeImageService(file: fotoUji, cropped: fotoCrop),
+    );
+    await tester.pumpWidget(_wrap(controller));
+
+    await _pickFrom(tester, 'Galeri');
+
+    expect(controller.selectedImage?.path, fotoCrop.path);
+    expect(controller.selectedImage?.path, isNot(fotoUji.path));
+    expect(find.byType(Image), findsOneWidget);
+  });
+
+  testWidgets('user membatalkan crop: foto asli yang dipakai', (tester) async {
+    // cropReturnsNull meniru user menutup layar crop tanpa memangkas.
+    final controller = HomeController(
+      imageService: _FakeImageService(file: fotoUji, cropReturnsNull: true),
+    );
+    await tester.pumpWidget(_wrap(controller));
+
+    await _pickFrom(tester, 'Galeri');
+
+    expect(controller.selectedImage?.path, fotoUji.path);
+    expect(find.byType(Image), findsOneWidget);
   });
 
   testWidgets('user membatalkan: tidak ada perubahan & tidak ada SnackBar', (

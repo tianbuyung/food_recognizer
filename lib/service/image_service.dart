@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -22,15 +24,20 @@ class CameraPermissionDeniedException implements Exception {
   String toString() => 'CameraPermissionDeniedException: $message';
 }
 
-/// Pembungkus tipis di atas package `image_picker` + `permission_handler`.
+/// Pembungkus tipis di atas package `image_picker`, `permission_handler`, dan
+/// `image_cropper`.
 ///
-/// Semua urusan "dunia luar" (dialog sistem, izin) berhenti di sini, sehingga
-/// controller cukup memanggil [pickImage] tanpa tahu detail platform.
+/// Semua urusan "dunia luar" (dialog sistem, izin, layar crop) berhenti di
+/// sini, sehingga controller cukup memanggil [pickImage] / [cropImage] tanpa
+/// tahu detail platform.
 class ImageService {
-  /// [picker] bisa diisi saat unit test untuk menggantikan picker asli.
-  ImageService({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
+  /// [picker] & [cropper] bisa diisi saat test untuk menggantikan yang asli.
+  ImageService({ImagePicker? picker, ImageCropper? cropper})
+    : _picker = picker ?? ImagePicker(),
+      _cropper = cropper ?? ImageCropper();
 
   final ImagePicker _picker;
+  final ImageCropper _cropper;
 
   /// Izin runtime hanya ada di Android & iOS. Di web/desktop, plugin
   /// permission_handler tidak tersedia sehingga pemanggilannya justru error —
@@ -60,6 +67,39 @@ class ImageService {
     throw CameraPermissionDeniedException(
       isPermanent: status.isPermanentlyDenied || status.isRestricted,
     );
+  }
+
+  /// Membuka layar crop untuk gambar di [sourcePath], dikunci rasio 1:1.
+  ///
+  /// Rasio 1:1 dipilih karena model TFLite memakai input 224x224 (persegi) dan
+  /// preview app juga 1:1 — jadi hasil crop konsisten ujung ke ujung.
+  ///
+  /// Mengembalikan [XFile] hasil crop, atau `null` bila user membatalkan crop.
+  /// Nilai dikembalikan sebagai [XFile] (bukan [CroppedFile]) agar tipe state
+  /// di controller tetap seragam dengan hasil [pickImage].
+  Future<XFile?> cropImage(String sourcePath) async {
+    final cropped = await _cropper.cropImage(
+      sourcePath: sourcePath,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Pangkas Makanan',
+          toolbarColor: Colors.green,
+          toolbarWidgetColor: Colors.white,
+          // Kunci rasio: user hanya bisa geser/zoom, tak bisa ubah bentuk.
+          lockAspectRatio: true,
+          hideBottomControls: true,
+        ),
+        IOSUiSettings(
+          title: 'Pangkas Makanan',
+          aspectRatioLockEnabled: true,
+          resetAspectRatioEnabled: false,
+        ),
+      ],
+    );
+
+    if (cropped == null) return null;
+    return XFile(cropped.path);
   }
 
   /// Membuka halaman Pengaturan aplikasi (untuk kasus izin ditolak permanen).
