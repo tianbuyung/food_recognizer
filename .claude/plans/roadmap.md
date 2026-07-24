@@ -95,9 +95,9 @@ Lalu bertingkat:
 
 ### Tahap 3 — Kriteria 3: Halaman prediksi
 
-- [ ] **Basic:** halaman detail — foto yang diambil + nama makanan hasil inferensi + confidence score (%).
-- [ ] **Skilled:** **MealDB API** (gratis, tanpa key) — resep terkait via endpoint Search: nama (`strMeal`), foto (`strMealThumb`), bahan (`strIngredientX`/`strMeasureX`), langkah (`strInstructions`).
-- [ ] **Advanced:** **Gemini API** — nutrisi (kalori, karbohidrat, lemak, serat, protein dalam gram) via structured output. API key JANGAN di-hardcode, load saat runtime.
+- [x] **Basic:** halaman detail — foto + nama + confidence. ✅ (sudah di `ResultPage` sejak PR #5).
+- [x] **Skilled:** **MealDB API** (gratis, tanpa key). ✅ (branch `feat/resep-mealdb`) — `RecipeService.searchByName` → bagian "Resep" di `ResultPage` (kartu foto+nama+area) → `RecipeDetailPage` (bahan + langkah). Otomatis fetch dari `topResult.label`. 7 test (MockClient). Diverifikasi: nasi-lemak → resep Malaysian tampil. Izin INTERNET ditambah di manifest (untuk release).
+- [ ] **Advanced:** **Gemini API** — nutrisi (kalori, karbohidrat, lemak, serat, protein dalam gram) via structured output. API key JANGAN di-hardcode, load saat runtime. ← BERIKUTNYA (butuh API key dari user, dipandu).
 
 ### Tahap 4 — Pra-submission
 
@@ -131,16 +131,17 @@ Lalu bertingkat:
 - ✅ **Kriteria 2 Basic + sumber Advanced SELESAI** (2026-07-24). Inferensi TFLite dari model Firebase Storage, diverifikasi di emulator (nasi-lemak → 87.9% benar). Firebase Storage dipakai (Firebase ML deprecated).
 - ✅ **Kriteria 2 Skilled (Isolate) SELESAI** (2026-07-24). Inferensi pindah ke Isolate.run, hasil identik. **KRITERIA 2 TUNTAS 3 tier.**
 - ✅ **Setup tooling** (2026-07-24): kagglehub, Firebase CLI, FlutterFire CLI, Xcode 26.6, CocoaPods, Ruby 4.0.6, xcodeproj — dicatat di `~/Development/tools/installed-tools.md`. Firebase project `projecopedia-food-recognizer` dibuat.
+- ✅ **Kriteria 3 Basic + Skilled SELESAI** (2026-07-24). Halaman prediksi (foto+nama+confidence) + resep MealDB (kartu → detail). Diverifikasi di emulator.
 
 ## ▶️ LANJUT DARI SINI (sesi berikutnya)
 
-- **Terakhir dikerjakan:** Kriteria 2 **Skilled (Isolate)** (branch `feat/ml-isolate`). **KRITERIA 1 & 2 TUNTAS 3 tier.**
-- **Berikutnya:** **Kriteria 3 — Halaman prediksi** (bertingkat):
-  - Basic: sudah sebagian (foto + nama + confidence di `ResultPage`). Pastikan lengkap.
-  - Skilled: **MealDB API** (gratis, tanpa key) — resep terkait dari `topResult.label` (endpoint Search by name + Lookup by id).
-  - Advanced: **Gemini API** — nutrisi (kalori/karbo/lemak/serat/protein gram) via structured output. Config di `05-tips-and-trik.md`. **API key JANGAN di-hardcode** (load runtime).
-- **Aksi pertama:** susun rencana Kriteria 3 (MealDB dulu, tanpa key; Gemini butuh API key dari Google AI Studio — pandu user). Tunggu approval.
-- **Catatan:** feed kamera live juga bisa disambung ke inferensi realtime nanti (butuh `ImageUtils.convertCameraImage` dari starter project).
+- **Terakhir dikerjakan:** Kriteria 3 **Skilled (MealDB)** (branch `feat/resep-mealdb`). **Kriteria 1, 2 TUNTAS; Kriteria 3 tinggal Advanced.**
+- **Berikutnya (TERAKHIR): Kriteria 3 Advanced — Gemini API** (nutrisi). Tinggal 1 tier lagi untuk semua kriteria 4 poin!
+  - **PRASYARAT: API key** dari Google AI Studio (aistudio.google.com) — **pandu user buat key**, load runtime (JANGAN hardcode; mis. `--dart-define` atau file gitignored).
+  - Config di `05-tips-and-trik.md`: system instruction ("mesin identifikasi nutrisi... kalori/karbo/lemak/serat/protein gram") + prompt (`Nama makanannya adalah $foodName.`) + **structured output** (JSON 5 angka).
+  - Paket: `google_generative_ai` (atau http langsung). Tampilkan nutrisi di `ResultPage` (bagian baru) dari `topResult.label`.
+- **Lalu:** Tahap 4 pra-submission (`/submission-check`: analyze, dart format, cek overflow, asset <5MB, ZIP <25MB).
+- **Catatan:** feed kamera live bisa disambung ke inferensi realtime nanti (butuh `ImageUtils.convertCameraImage` dari starter project) — opsional.
 
 ## Catatan lingkungan
 
