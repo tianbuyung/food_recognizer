@@ -3,8 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:food_recognizer/controller/recipe_controller.dart';
 import 'package:food_recognizer/controller/result_controller.dart';
+import 'package:food_recognizer/model/recipe.dart';
 import 'package:food_recognizer/service/ml_service.dart';
+import 'package:food_recognizer/service/recipe_service.dart';
+import 'package:food_recognizer/ui/recipe_detail_page.dart';
 import 'package:food_recognizer/widget/classification_item.dart';
 
 /// Halaman hasil prediksi: foto yang dianalisis + nama makanan + confidence.
@@ -209,7 +213,105 @@ class _Results extends StatelessWidget {
           for (final c in alternatives)
             ClassificationItem(label: c.label, confidence: c.confidence),
         ],
+        const SizedBox(height: 24),
+        // Resep terkait dari MealDB (Kriteria 3 Skilled).
+        _RecipeSection(foodName: top.label),
       ],
+    );
+  }
+}
+
+/// Bagian resep: otomatis mencari resep untuk [foodName] saat dibuat.
+///
+/// Membuat [RecipeController] lokal (pakai [RecipeService] bersama dari root).
+class _RecipeSection extends StatelessWidget {
+  const _RecipeSection({required this.foodName});
+
+  final String foodName;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<RecipeController>(
+      create: (ctx) =>
+          RecipeController(service: ctx.read<RecipeService>())..fetch(foodName),
+      child: const _RecipeSectionBody(),
+    );
+  }
+}
+
+class _RecipeSectionBody extends StatelessWidget {
+  const _RecipeSectionBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<RecipeController>();
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Resep', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        switch (controller.status) {
+          RecipeStatus.loading => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          RecipeStatus.empty => Text(
+            'Belum ada resep untuk makanan ini di MealDB.',
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          RecipeStatus.error => Text(
+            controller.errorMessage ?? 'Gagal memuat resep.',
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
+          RecipeStatus.done => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final r in controller.recipes) _RecipeCard(recipe: r),
+            ],
+          ),
+          RecipeStatus.idle => const SizedBox.shrink(),
+        },
+      ],
+    );
+  }
+}
+
+/// Kartu resep ringkas; tap → halaman detail.
+class _RecipeCard extends StatelessWidget {
+  const _RecipeCard({required this.recipe});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(8),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: recipe.thumbnailUrl.isEmpty
+                ? const Icon(Icons.restaurant)
+                : Image.network(
+                    recipe.thumbnailUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Icon(Icons.restaurant),
+                  ),
+          ),
+        ),
+        title: Text(recipe.name),
+        subtitle: Text('${recipe.area} · ${recipe.category}'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => RecipeDetailPage(recipe: recipe)),
+        ),
+      ),
     );
   }
 }
