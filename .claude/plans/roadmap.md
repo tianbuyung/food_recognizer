@@ -89,7 +89,7 @@ Jantung aplikasi. **PRASYARAT: download aset dulu** (akan dipandu step-by-step):
 Lalu bertingkat:
 
 - [x] **Basic:** `tflite_flutter` + `image`. ✅ (branch `feat/ml-inference`) — `MlService.classify`: decode → resize **192×192** → inferensi uint8 → top-5. `ResultPage` tampil juara + alternatif. Diverifikasi di emulator: nasi-lemak → **"Nasi lemak" 87.9%** (benar!).
-- [ ] **Skilled:** pindahkan inferensi ke **Isolate** biar UI nggak freeze. ← BERIKUTNYA (PR-B)
+- [x] **Skilled:** inferensi di **Isolate**. ✅ (branch `feat/ml-isolate`) — `MlService.classify` memanggil `Isolate.run` → fungsi top-level `_runInferenceIsolate` rekonstruksi `Interpreter.fromAddress` + decode + resize + run di isolate; map label + dequantisasi di isolate utama. Diverifikasi: hasil identik (Nasi lemak 87.9%), UI tak freeze. **KRITERIA 2 TUNTAS.**
 - [x] **Advanced (sumber cloud):** model diunduh dari **Firebase Storage** (bukan Firebase ML yang deprecated). ✅ `firebase_core` init + `firebase_storage` download + cache lokal. Config (`firebase_options.dart`, `google-services.json`, plist) ter-commit.
 - [x] Catatan gradle: `applicationId` sudah `com.projecopedia.food_recognizer` (sejak Tahap 0). Tambahan: `kotlin.jvm.target.validation.mode=warning` (JDK 25 vs plugin).
 
@@ -129,13 +129,17 @@ Lalu bertingkat:
 - ✅ **Tier Skilled Kriteria 1 SELESAI** (2026-07-24). Crop 1:1 otomatis, diverifikasi di emulator (layar uCrop muncul & konfirmasi menghasilkan preview).
 - ✅ **Tier Advanced Kriteria 1 SELESAI** (2026-07-24). Kamera live (preview + shutter + flip), diverifikasi di emulator. **KRITERIA 1 TUNTAS (Basic+Skilled+Advanced → target 4 poin).**
 - ✅ **Kriteria 2 Basic + sumber Advanced SELESAI** (2026-07-24). Inferensi TFLite dari model Firebase Storage, diverifikasi di emulator (nasi-lemak → 87.9% benar). Firebase Storage dipakai (Firebase ML deprecated).
+- ✅ **Kriteria 2 Skilled (Isolate) SELESAI** (2026-07-24). Inferensi pindah ke Isolate.run, hasil identik. **KRITERIA 2 TUNTAS 3 tier.**
 - ✅ **Setup tooling** (2026-07-24): kagglehub, Firebase CLI, FlutterFire CLI, Xcode 26.6, CocoaPods, Ruby 4.0.6, xcodeproj — dicatat di `~/Development/tools/installed-tools.md`. Firebase project `projecopedia-food-recognizer` dibuat.
 
 ## ▶️ LANJUT DARI SINI (sesi berikutnya)
 
-- **Terakhir dikerjakan:** Kriteria 2 **Basic + sumber Advanced** (branch `feat/ml-inference`, belum PR/commit saat catatan ini — cek `git log`). Inferensi dari Firebase Storage terbukti jalan.
-- **Berikutnya:** **Kriteria 2 tier Skilled — Isolate** (PR-B). Pindahkan `MlService.classify` (decode + resize + `interpreter.run`) ke Isolate agar UI tak freeze. Pola tflite_flutter: kirim `interpreter.address` ke isolate, rekonstruksi `Interpreter.fromAddress`.
-- **Lalu:** Kriteria 3 (MealDB resep + Gemini nutrisi) — pakai `topResult.label` sebagai kunci. Config Gemini ada di `05-tips-and-trik.md` (system instruction + structured output).
+- **Terakhir dikerjakan:** Kriteria 2 **Skilled (Isolate)** (branch `feat/ml-isolate`). **KRITERIA 1 & 2 TUNTAS 3 tier.**
+- **Berikutnya:** **Kriteria 3 — Halaman prediksi** (bertingkat):
+  - Basic: sudah sebagian (foto + nama + confidence di `ResultPage`). Pastikan lengkap.
+  - Skilled: **MealDB API** (gratis, tanpa key) — resep terkait dari `topResult.label` (endpoint Search by name + Lookup by id).
+  - Advanced: **Gemini API** — nutrisi (kalori/karbo/lemak/serat/protein gram) via structured output. Config di `05-tips-and-trik.md`. **API key JANGAN di-hardcode** (load runtime).
+- **Aksi pertama:** susun rencana Kriteria 3 (MealDB dulu, tanpa key; Gemini butuh API key dari Google AI Studio — pandu user). Tunggu approval.
 - **Catatan:** feed kamera live juga bisa disambung ke inferensi realtime nanti (butuh `ImageUtils.convertCameraImage` dari starter project).
 
 ## Catatan lingkungan

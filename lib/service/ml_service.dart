@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -102,43 +103,31 @@ class MlService {
       throw StateError('MlService belum siap — panggil prepare() dulu.');
     }
 
-    // 1. Decode file → objek Image, lalu resize ke 192×192.
-    final decoded = await img.decodeImageFile(imagePath);
-    if (decoded == null) throw StateError('Gambar tidak bisa dibaca.');
-    final resized = img.copyResize(
-      decoded,
-      width: _inputSize,
-      height: _inputSize,
+    // Kerja CPU-berat (decode, resize, susun input, interpreter.run, sort)
+    // dijalankan di Isolate TERPISAH agar isolate utama (UI) tidak nge-freeze.
+    // Interpreter native tak bisa dikirim antar-isolate, tapi ALAMAT memori-nya
+    // (int) bisa — di dalam isolate direkonstruksi via Interpreter.fromAddress.
+    final topIndexed = await Isolate.run(
+      () => _runInferenceIsolate(
+        imagePath: imagePath,
+        interpreterAddress: interpreter.address,
+        inputSize: _inputSize,
+        outputSize: labels.length,
+        take: topK + 1, // +1 penyangga bila __background__ ikut teratas
+      ),
     );
 
-    // 2. Susun input uint8 berbentuk [1, 192, 192, 3] (piksel mentah 0–255).
-    final input = [
-      List.generate(
-        _inputSize,
-        (y) => List.generate(_inputSize, (x) {
-          final p = resized.getPixel(x, y);
-          return [p.r.toInt(), p.g.toInt(), p.b.toInt()];
-        }),
-      ),
-    ];
-
-    // 3. Buffer output [1, 2024].
-    final output = [List.filled(labels.length, 0)];
-
-    // 4. Jalankan inferensi.
-    interpreter.run(input, output);
-
-    // 5. Urutkan indeks menurut skor, dequantisasi, lewati background (idx 0).
-    final scores = output[0];
-    final indices = List<int>.generate(scores.length, (i) => i)
-      ..sort((a, b) => scores[b].compareTo(scores[a]));
-
+    // Kembali di isolate utama: map indeks → label + dequantisasi, lewati
+    // __background__ (idx 0). Kerja ringan ini aman di UI thread.
     final results = <Classification>[];
-    for (final i in indices) {
-      if (i == 0) continue; // __background__
-      if (i >= labels.length) continue;
+    for (final e in topIndexed) {
+      if (e.index == 0) continue; // __background__
+      if (e.index >= labels.length) continue;
       results.add(
-        Classification(label: labels[i], confidence: scores[i] * _outputScale),
+        Classification(
+          label: labels[e.index],
+          confidence: e.score * _outputScale,
+        ),
       );
       if (results.length >= topK) break;
     }
@@ -149,4 +138,48 @@ class MlService {
     _interpreter?.close();
     _interpreter = null;
   }
+}
+
+/// Dijalankan DI DALAM Isolate: decode gambar → inferensi → top (indeks, skor).
+///
+/// Harus fungsi top-level (bukan method) agar bisa dikirim ke [Isolate.run].
+/// Mengembalikan list record sederhana (int) yang aman disalin antar-isolate.
+/// [interpreterAddress] adalah alamat native interpreter yang dibuat di isolate
+/// utama; di sini direkonstruksi tanpa memuat ulang model.
+List<({int index, int score})> _runInferenceIsolate({
+  required String imagePath,
+  required int interpreterAddress,
+  required int inputSize,
+  required int outputSize,
+  required int take,
+}) {
+  final interpreter = Interpreter.fromAddress(interpreterAddress);
+
+  // Decode + resize ke inputSize×inputSize (versi sinkron, di isolate).
+  final bytes = File(imagePath).readAsBytesSync();
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) throw StateError('Gambar tidak bisa dibaca.');
+  final resized = img.copyResize(decoded, width: inputSize, height: inputSize);
+
+  // Input uint8 [1, inputSize, inputSize, 3] (piksel mentah 0–255).
+  final input = [
+    List.generate(
+      inputSize,
+      (y) => List.generate(inputSize, (x) {
+        final p = resized.getPixel(x, y);
+        return [p.r.toInt(), p.g.toInt(), p.b.toInt()];
+      }),
+    ),
+  ];
+  final output = [List.filled(outputSize, 0)];
+
+  interpreter.run(input, output);
+
+  // Ambil [take] indeks berskor tertinggi (sort di sini, hemat data yang
+  // dikirim balik ke isolate utama).
+  final scores = output[0];
+  final indices = List<int>.generate(scores.length, (i) => i)
+    ..sort((a, b) => scores[b].compareTo(scores[a]));
+
+  return [for (final i in indices.take(take)) (index: i, score: scores[i])];
 }
