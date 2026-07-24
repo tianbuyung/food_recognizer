@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:food_recognizer/service/image_service.dart';
-import 'package:food_recognizer/ui/result_page.dart';
 
 /// Controller untuk [HomePage].
 ///
@@ -121,13 +120,4 @@ class HomeController extends ChangeNotifier {
 
   /// Membuka Pengaturan aplikasi agar user bisa mengaktifkan izin manual.
   Future<void> openAppSettingsPage() => _imageService.openSettings();
-
-  /// Pindah ke halaman hasil prediksi. Belum dipakai — akan disambungkan ke
-  /// tombol "Analisis" setelah inferensi ML siap (Tahap 2).
-  void goToResultPage(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ResultPage()),
-    );
-  }
 }

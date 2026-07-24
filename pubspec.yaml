@@ -50,6 +50,19 @@ dependencies:
   # Kriteria 1 (Advanced): feed kamera live (preview realtime + jepret).
   camera: ^0.12.0+2
 
+  # Kriteria 2 (Advanced): inisialisasi Firebase + unduh model dari cloud.
+  firebase_core: ^4.12.1
+  firebase_storage: ^13.4.5
+
+  # Kriteria 2 (Basic): inferensi model TFLite via LiteRT.
+  tflite_flutter: ^0.12.1
+
+  # Kriteria 2 (Basic): decode & resize gambar ke 224x224 sebelum inferensi.
+  image: ^4.9.1
+
+  # Kriteria 2: folder lokal untuk cache model yang diunduh.
+  path_provider: ^2.1.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -71,6 +84,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Aset label 2023 nama makanan (indeks output model → nama). Kriteria 2.
+  assets:
+    - assets/labels/aiy_food_V1_labelmap.csv
 
   # To add assets to your application, add an assets section, like this:
   # assets:

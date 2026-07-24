@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:food_recognizer/controller/home_controller.dart';
 import 'package:food_recognizer/ui/camera_page.dart';
+import 'package:food_recognizer/ui/result_page.dart';
 
 /// Tiga cara memasukkan gambar (dipilih lewat bottom sheet).
 enum _PickSource {
@@ -70,15 +71,19 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Tooltip(
-                        message: 'Inferensi ML menyusul di Tahap 2',
-                        child: FilledButton.icon(
-                          // Sengaja null: tombol tampil tapi nonaktif sampai
-                          // model TFLite siap dipasang.
-                          onPressed: null,
-                          icon: const Icon(Icons.auto_awesome),
-                          label: const Text('Analisis'),
-                        ),
+                      child: FilledButton.icon(
+                        // Buka halaman hasil; inferensi berjalan di sana.
+                        onPressed: controller.isPicking
+                            ? null
+                            : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ResultPage(imagePath: image.path),
+                                ),
+                              ),
+                        icon: const Icon(Icons.auto_awesome),
+                        label: const Text('Analisis'),
                       ),
                     ),
                   ],
