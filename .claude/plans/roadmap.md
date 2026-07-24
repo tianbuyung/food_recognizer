@@ -73,7 +73,7 @@ Paling gampang, tanpa akun/API. Kerjakan bertingkat:
 
 - [x] **Basic:** `image_picker` — ambil dari kamera & galeri, tampilkan gambar terpilih di halaman. ✅ (branch `feat/ambil-gambar`) — `ImageService` bungkus picker + `permission_handler`, `HomeController` state XFile, `HomePage` bottom sheet + preview 1:1 + SnackBar error, 6 widget test.
 - [x] **Skilled:** `image_cropper` — crop bagian penting gambar. ✅ (branch `feat/crop-gambar`) — crop otomatis setelah pilih foto, rasio dikunci 1:1 (cocok input model 224×224). Batal crop → foto asli dipakai. `UCropActivity` didaftarkan di AndroidManifest. 8 widget test.
-- [ ] **Advanced:** `camera` — live camera stream / camera feed untuk identifikasi.
+- [x] **Advanced:** `camera` — live camera feed. ✅ (branch `feat/kamera-live`) — `CameraPage` (preview realtime + shutter + flip kamera, lifecycle aman via WidgetsBindingObserver). Opsi ke-3 di bottom sheet; jepret → crop 1:1 → preview. Izin CAMERA reuse dari tier Basic. 12 widget test. Catatan: identifikasi realtime menyusul di Kriteria 2 (butuh model).
 - [x] Setup izin: Android `AndroidManifest.xml` (`CAMERA`) + iOS `Info.plist` (`NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription`). ✅ Galeri Android 13+ pakai Photo Picker (tanpa izin storage).
 
 ### Tahap 2 — Kriteria 2: ML inference
@@ -123,13 +123,16 @@ Lalu bertingkat:
 - ✅ **State management DIPUTUS: `Provider`** (ikut skeleton mentor). Struktur folder ikut mentor: `controller/`, `ui/`, `widget/` (+ `service/model/util` menyusul).
 - ✅ **Tier Basic Kriteria 1 SELESAI** (2026-07-24). Diverifikasi di emulator Android. PR #2.
 - ✅ **Tier Skilled Kriteria 1 SELESAI** (2026-07-24). Crop 1:1 otomatis, diverifikasi di emulator (layar uCrop muncul & konfirmasi menghasilkan preview).
+- ✅ **Tier Advanced Kriteria 1 SELESAI** (2026-07-24). Kamera live (preview + shutter + flip), diverifikasi di emulator. **KRITERIA 1 TUNTAS (Basic+Skilled+Advanced → target 4 poin).**
 
 ## ▶️ LANJUT DARI SINI (sesi berikutnya)
 
-- **Terakhir dikerjakan:** Kriteria 1 tier **Skilled** (branch `feat/crop-gambar`, PR ke develop). Basic & fondasi sudah di develop.
-- **Berikutnya:** **Kriteria 1 tier Advanced — `camera`** (live camera stream/feed untuk identifikasi realtime). Ini menuntaskan Kriteria 1 ke 4 poin. Belum ada rencana disetujui.
-- **Aksi pertama:** susun rencana live camera (`camera` package: preview stream, ambil frame, izin CAMERA sudah ada dari tier Basic), **tunggu approval user sebelum ngoding** (plan-before-coding).
-- Belum perlu aset eksternal untuk Kriteria 1 (Kaggle/Firebase/Gemini baru dibutuhkan Kriteria 2–3).
+- **Terakhir dikerjakan:** Kriteria 1 tier **Advanced** (branch `feat/kamera-live`, PR ke develop). **Kriteria 1 lengkap 3 tier.**
+- **Berikutnya:** **Kriteria 2 — ML inference.** PRASYARAT: download aset dulu (akan dipandu):
+  - Model `.tflite`: Kaggle `google/aiy/tfLite/vision-classifier-food-v1`.
+  - Sample images: https://github.com/dicodingacademy/assets/raw/refs/heads/main/flutter_ml/assets/assets.zip
+- **Aksi pertama:** pandu user download model + sample images, lalu susun rencana tier Basic Kriteria 2 (`tflite_flutter` + package `image`: load model, preprocess 224×224, inferensi). **Tunggu approval sebelum ngoding.**
+- **Catatan:** tombol "Analisis" & feed kamera live sudah siap jadi titik sambung inferensi. Firebase & Gemini baru dibutuhkan tier Advanced Kriteria 2–3.
 
 ## Catatan lingkungan
 
